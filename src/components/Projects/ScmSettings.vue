@@ -176,8 +176,8 @@
               v-model="tab"
           >
             <v-tab-item
-                v-for="item in linkItems"
-                :key="item.tab"
+                v-for="index in linkSets"
+                :key="index"
             >
               <v-card flat>
                 <v-card-text>
@@ -194,13 +194,13 @@
                         :key="autoGrowHack"
                         auto-grow
                         label="Ключ1\nКлюч2\nКлюч3"
-                        :value="item.keywordsFile"
+                        :value="index.keywordsFile"
                         rows="4"
                         row-height="30"
                         hide-details="true"
                         type="array"
                         class="textarea-custom"
-                        @change="changeTab('keywordsFile', $event)"
+                        @change="changeTab('keywordsFile', $event, index.tab)"
                     ></v-textarea>
                   </p>
                 </v-card-text>
@@ -218,12 +218,12 @@
                         :key="autoGrowHack"
                         auto-grow
                         label="Ссылка1\nСсылка2\nСсылка3"
-                        :value="item.urlsFile"
+                        :value="index.urlsFile"
                         rows="4"
                         row-height="30"
                         hide-details="true"
                         type="array"
-                        @change="changeTab('urlsFile', $event)"
+                        @change="changeTab('urlsFile', $event, index.tab)"
                     ></v-textarea>
                   </p>
                 </v-card-text>
@@ -232,9 +232,9 @@
                       class="mb-0"
                   >
                     <v-checkbox
-                        v-model="item.lockUrl"
+                        v-model="index.lockUrl"
                         label="Lock url + keyword on same line"
-                        @change="changeTab('lockUrl', $event)"
+                        @change="changeTab('lockUrl', $event, index.tab)"
                     ></v-checkbox>
                   </p>
                 </v-card-text>
@@ -384,7 +384,7 @@ export default {
       dialogSettings: false,
       autoGrowHack: false,
       linkSetsInt: 5,
-      //linkSets: this.createLinkSets(),
+      linkSets: this.createLinkSets(),
       tab: null,
       //contentList: []
     }
@@ -393,6 +393,7 @@ export default {
     openDialogSettings() {
       this.dialogSettings = true
       this.forceReRender()
+      this.linkSets = this.createLinkSets()
     },
     closeDialogSettings() {
       this.dialogSettings = false
@@ -405,30 +406,30 @@ export default {
        linkSets.push({
          'keywordsFile': this.scm_options.linkSets[index]['keywordsFile'],
          'urlsFile': this.scm_options.linkSets[index]['urlsFile'],
-         'lockUrl': this.scm_options.linkSets[index]['lockUrl']
+         'lockUrl': this.scm_options.linkSets[index]['lockUrl'],
+         'tab': index
        })
      }
      for (let item = 0; item < (5 - countLinkSets); item++) {
        linkSets.push({
          'keywordsFile': "",
          'urlsFile': "",
-         'lockUrl': false
+         'lockUrl': false,
+         'tab': countLinkSets + item
        })
      }
      return linkSets
     },
-    changeTab (key, value) {
-      for (const tab in this.scm_options.linkSets) {
-        this.$set(this.scm_options.linkSets[tab], key, value);
-      }
+    changeTab(key, value, index) {
+      this.$set(this.linkSets[index], key, value);
     },
     forceReRender() {
       this.autoGrowHack = !this.autoGrowHack;
     },
-    changeValue (key, value) {
+    changeValue(key, value) {
       this.$emit('change', { key, value });
     },
-    changeScmTemplateId (key, value) {
+    changeScmTemplateId(key, value) {
       this.$emit('changeScmId', { key, value });
     },
     async getSettings() {
@@ -489,7 +490,7 @@ export default {
           articleTemplateInfo: this.scm_options.articleTemplateInfo,
           settingTemplate: this.scm_template_id,
           articleReplaceFilterFile: this.scm_options.articleReplaceFilterFile || "",
-          linkSets: this.linkItems
+          linkSets: this.linkSets
         }, {
           headers: {
             'Authorization' : this.$auth.strategy.token.get()
@@ -551,9 +552,9 @@ export default {
     langItems() {
       return languages
     },
-    linkItems() {
+    /*linkItems() {
       return this.createLinkSets()
-    },
+    },*/
     sliceCountry() {
       return this.scm_options.articleGoogleCountry?.split(':')[0] ?? ""
     }
